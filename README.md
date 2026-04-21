@@ -5,6 +5,8 @@
 
 This repository contains the codebase accompanying the paper **"Causally-Constrained Probabilistic Forecasting for Time-Series Anomaly Detection"**.
 
+**Paper:** [arXiv:2604.17998](https://doi.org/10.48550/arXiv.2604.17998)
+
 The implementation combines causal prior information with probabilistic forecasting for multivariate time-series anomaly detection. At a high level, the code:
 - builds windowed multivariate forecasting samples for each target variable,
 - injects a precomputed causal graph as a structural prior,
