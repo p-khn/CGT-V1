@@ -9,3 +9,6 @@ from model import gaussian_nll
 
 def create_optimizer(model, cfg):
     return optim.Adam(model.parameters(), lr=cfg.lr)
+
+def train_loop(model, opt, data_bundle, cfg, device):
+    model.train(True)
