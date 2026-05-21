@@ -17,3 +17,6 @@ def train_loop(model, opt, data_bundle, cfg, device):
         tot_loss, n_seen = 0.0, 0
         gamma_t = min(cfg.gamma, (ep + 1) / max(1, cfg.warmup_eps) * cfg.gamma)
         beta_t = cfg.beta_kl * min(1.0, (ep + 1) / max(1, cfg.warmup_eps))
+        for x, y, var, ts in data_bundle.train_dl:
+            x = x.to(device)
+            y = y.to(device)
