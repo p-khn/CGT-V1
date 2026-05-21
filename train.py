@@ -20,3 +20,20 @@ def train_loop(model, opt, data_bundle, cfg, device):
         for x, y, var, ts in data_bundle.train_dl:
             x = x.to(device)
             y = y.to(device)
+            
+            (mu_c, logv_c), (mu_o, logv_o), alpha, grp, dmu, dlogv, kl_z = model(
+                var,
+                x,
+                y=y,
+                mc_samples=1,
+                use_prior_at_eval=False,
+            )
+            blk = model.blocks[str(var)]
+
+            nll_c = gaussian_nll(mu_c, logv_c, y).mean()
+
+            mu_o_loss = mu_c.detach() + dmu
+            logv_o_loss = logv_c.detach() + dlogv
+            nll_o = gaussian_nll(mu_o_loss, logv_o_loss, y).mean()
+
+            res_pen = dmu.pow(2).mean() + dlogv.pow(2).mean()
