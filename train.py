@@ -75,3 +75,32 @@ def train_loop(model, opt, data_bundle, cfg, device):
                 else torch.tensor(0.0, device=alpha.device)
             )
             margin_pen = 0.1 * torch.relu(a_oth - a_par + 0.05)
+            shadow_w = gamma_t
+            loss = (
+                (1 - gamma_t) * nll_c
+                + shadow_w * nll_o
+                + beta_t * kl_z
+                + cfg.lambda_resid * res_pen
+                + prior_loss
+                + l1_other
+                + push_causal
+                + margin_pen
+                + cfg.lambda_grp * grp
+            )
+
+            if not torch.isfinite(loss):
+                logging.warning(
+                    "Non-finite loss; skipping batch. "
+                    f"nll_c={float(nll_c):.3g} nll_o={float(nll_o):.3g} "
+                    f"kl={float(kl_z):.3g} prior={float(prior_loss):.3g}"
+                )
+                continue
+
+            opt.zero_grad()
+            loss.backward()
+            if cfg.grad_clip is not None:
+                nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip)
+            opt.step()
+
+            tot_loss += loss.item() * len(y)
+            n_seen += len(y)
