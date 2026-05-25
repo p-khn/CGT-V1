@@ -104,3 +104,33 @@ def train_loop(model, opt, data_bundle, cfg, device):
 
             tot_loss += loss.item() * len(y)
             n_seen += len(y)
+        
+        with torch.no_grad():
+            blk0 = model.blocks["0"]
+            a0 = torch.sigmoid(blk0.logits).detach().cpu()
+            logging.info(
+                f"epoch {ep:03d}  train loss={tot_loss / max(1, n_seen):.4f}  "
+                f"α(parents)={a0[blk0.idx_causal].mean():.3f}  "
+                f"α(other)={a0[blk0.idx_other].mean():.3f}"
+            )
+
+    torch.save(
+        {
+            "state_dict": model.state_dict(),
+            "scaler_min": data_bundle.scaler.min_,
+            "scaler_scale": data_bundle.scaler.scale_,
+            "config": {
+                "WINDOW": cfg.window,
+                "TAU_MAX": cfg.tau_max,
+                "D_MODEL": cfg.d_model,
+                "N_HEAD": cfg.n_head,
+                "D_FF": cfg.d_ff,
+                "N_LAYERS": cfg.n_layers,
+                "Z_DIM": cfg.z_dim,
+                "GAMMA": cfg.gamma,
+                "BETA_KL": cfg.beta_kl,
+            },
+        },
+        "twohead_causal_transformer_shadow.pt",
+    )
+    logging.info("[ckpt] saved twohead_causal_transformer_shadow.pt")    
