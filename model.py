@@ -138,3 +138,31 @@ class TwoHeadCausalTFBlock(nn.Module):
 
         return (mu_c, logv_c), (mu_o, logv_o), alpha, grp_pen, dmu, dlogv, kl_z
 
+class TwoHeadForecaster(nn.Module):
+    def __init__(self, cfg, data_bundle):
+        super().__init__()
+        self.blocks = nn.ModuleDict()
+
+        for i in range(data_bundle.D):
+            pi = torch.zeros(data_bundle.P)
+            for p, (j, lag) in enumerate(data_bundle.edge_list):
+                if (i, j, lag) in data_bundle.pcmci_edges:
+                    pi[p] = 1.0
+            self.blocks[str(i)] = TwoHeadCausalTFBlock(
+                pi=pi,
+                feature_dim=data_bundle.P,
+                d_model=cfg.d_model,
+                n_head=cfg.n_head,
+                d_ff=cfg.d_ff,
+                n_layers=cfg.n_layers,
+                z_dim=cfg.z_dim,
+                sensor_ids=data_bundle.sensor_ids,
+            )
+
+    def forward(self, var, x, y=None, mc_samples=1, use_prior_at_eval=True):
+        return self.blocks[str(var)](
+            x,
+            y=y,
+            mc_samples=mc_samples,
+            use_prior_at_eval=use_prior_at_eval,
+        )
