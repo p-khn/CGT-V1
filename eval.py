@@ -190,7 +190,7 @@ def run_shadow_eval_and_spot(model, data_bundle, cfg, device):
     np.save("test_scores.npy", test_scores)
     with open("shadow_decision.txt", "w") as f:
         f.write(str(decision))
-    print("[Saved] train_scores.npy, test_scores.npy, shadow_decision.txt")
+    print("[Saved.] train_scores.npy, test_scores.npy, shadow_decision.txt")
 
     T_test = data_bundle.test_arr.shape[0]
     _, test_dim_mat = score_with_matrix_shadow(
